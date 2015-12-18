@@ -22,16 +22,28 @@
             <scope>test</scope>
         </dependency>
 
+        <!--<dependency>-->
+            <!--<groupId>org.apache.hadoop</groupId>-->
+            <!--<artifactId>hadoop-core</artifactId>-->
+            <!--<version>0.20.2-cdh3u6</version>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+            <!--<groupId>org.apache.hbase</groupId>-->
+            <!--<artifactId>hbase</artifactId>-->
+            <!--<version>0.94.15</version>-->
+        <!--</dependency>-->
+
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>0.20.2-cdh3u6</version>
+            <artifactId>hadoop-client</artifactId>
+            <version>2.2.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
-            <version>0.94.15</version>
+            <artifactId>hbase-client</artifactId>
+            <version>1.1.2</version>
         </dependency>
 
         <dependency>
