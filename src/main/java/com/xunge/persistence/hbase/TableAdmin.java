@@ -1,15 +1,16 @@
 package com.xunge.persistence.hbase;
 
 import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.regionserver.StoreFile;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
@@ -20,16 +21,18 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class TableAdmin {
 
     private static final Log LOG = LogFactory.getLog(TableAdmin.class);
-    private HBaseAdmin admin;
+    private Admin admin;
     private byte[] tableName;
     private HTableDescriptor desc;
+    private Connection connection;
 
     TableAdmin(byte[] tableName, Configuration conf) {
         this.tableName = tableName;
         try {
-            admin = new HBaseAdmin(conf);
-            if (!admin.tableExists(tableName)) {
-                desc = new HTableDescriptor(this.tableName);
+            connection = ConnectionFactory.createConnection(conf);
+            admin = connection.getAdmin();
+            if (!admin.tableExists(TableName.valueOf(tableName))) {
+                desc = new HTableDescriptor(TableName.valueOf(tableName));
                 admin.createTable(desc);
             } else {
                 LOG.info("table [" + tableName + "] already exists");
@@ -51,7 +54,7 @@ public class TableAdmin {
      */
     public FamilyAdmin family(byte[] name) {
         try {
-            desc = admin.getTableDescriptor(tableName);
+            desc = admin.getTableDescriptor(TableName.valueOf(name));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -62,11 +65,11 @@ public class TableAdmin {
         try {
             LOG.info("Adding family [" + Bytes.toString(name) + "] to table ["
                     + Bytes.toString(tableName) + "]");
-            admin.disableTable(tableName);
+            admin.disableTable(TableName.valueOf(tableName));
             HColumnDescriptor family = new HColumnDescriptor(name);
             desc.addFamily(family);
-            admin.modifyTable(tableName, desc);
-            admin.enableTable(tableName);
+            admin.modifyTable(TableName.valueOf(tableName), desc);
+            admin.enableTable(TableName.valueOf(tableName));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -81,12 +84,12 @@ public class TableAdmin {
     public static class FamilyAdmin {
 
         private TableAdmin tableAdmin;
-        private HBaseAdmin admin;
+        private Admin admin;
         private byte[] tableName;
         private HTableDescriptor desc;
         private byte[] familyName;
 
-        FamilyAdmin(TableAdmin tableAdmin, HBaseAdmin admin, byte[] tableName,
+        FamilyAdmin(TableAdmin tableAdmin, Admin admin, byte[] tableName,
                     HTableDescriptor desc, byte[] familyName) {
             this.tableAdmin = tableAdmin;
             this.admin = admin;
@@ -118,9 +121,9 @@ public class TableAdmin {
             return this;
         }
 
-        public FamilyAdmin enableBloomFilter(StoreFile.BloomType bloomType) {
+        public FamilyAdmin enableBloomFilter(BloomType bloomType) {
             HColumnDescriptor columnDescriptor = desc.getFamily(familyName);
-            if (columnDescriptor.getBloomFilterType() == StoreFile.BloomType.NONE) {
+            if (columnDescriptor.getBloomFilterType() == BloomType.NONE) {
                 LOG.info("Enable Bloom Filter for family ["
                         + Bytes.toString(familyName) + "].");
                 disableTable();
@@ -150,7 +153,7 @@ public class TableAdmin {
 
         private void disableTable() {
             try {
-                admin.disableTable(tableName);
+                admin.disableTable(TableName.valueOf(tableName));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -158,8 +161,8 @@ public class TableAdmin {
 
         private FamilyAdmin modifyAndEnable() {
             try {
-                admin.modifyTable(tableName, desc);
-                admin.enableTable(tableName);
+                admin.modifyTable(TableName.valueOf(tableName), desc);
+                admin.enableTable(TableName.valueOf(tableName));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

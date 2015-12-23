@@ -18,18 +18,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotFoundException;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.hadoop.hbase.client.HTablePool;
-import org.apache.hadoop.hbase.client.Increment;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import com.xunge.persistence.hbase.api.ForEach;
 import com.xunge.persistence.hbase.api.Row;
@@ -78,7 +69,7 @@ public final class HbaseAccessor<QUERY_OP_TYPE extends QueryOps<ROW_ID_TYPE>, RO
     // 0.94以后废弃
     private HTablePool pool;
 
-    private HConnection connection;
+    private Connection connection;
 
     private Class<?> whereClauseType;
 
@@ -640,12 +631,12 @@ public final class HbaseAccessor<QUERY_OP_TYPE extends QueryOps<ROW_ID_TYPE>, RO
     protected void flushDeletes(byte[] tableName, Queue<Delete> deletes) {
         // 废弃pool
         // HTableInterface table = pool.getTable(tableName);
-        HTableInterface table = null;
-        HConnection connection = this.connection;
+        org.apache.hadoop.hbase.client.Table table = null;
+        Connection connection = this.connection;
         lock.writeLock().lock();
         try {
             // connection = HConnectionManager.createConnection(conf);
-            table = connection.getTable(tableName);
+            table = connection.getTable(TableName.valueOf(tableName));
             table.delete(new ArrayList<Delete>(deletes));
             // table.flushCommits();
         } catch (IOException e) {
@@ -674,12 +665,12 @@ public final class HbaseAccessor<QUERY_OP_TYPE extends QueryOps<ROW_ID_TYPE>, RO
     protected void flushPuts(byte[] tableName, Queue<Put> puts) {
         // 废弃pool
         // HTableInterface table = pool.getTable(tableName);
-        HTableInterface table = null;
-        HConnection connection = this.connection;
+        org.apache.hadoop.hbase.client.Table table = null;
+        Connection connection = this.connection;
         lock.writeLock().lock();
         try {
             // connection = HConnectionManager.createConnection(conf);
-            table = connection.getTable(tableName);
+            table = connection.getTable(TableName.valueOf(tableName));
             table.put(new ArrayList<Put>(puts));
             // table.flushCommits();
         } catch (IOException e) {
@@ -706,14 +697,12 @@ public final class HbaseAccessor<QUERY_OP_TYPE extends QueryOps<ROW_ID_TYPE>, RO
      * @param increment
      */
     protected void flushCount(byte[] tableName, Increment increment) {
-        HTableInterface table = null;
-        HConnection connection = this.connection;
+        org.apache.hadoop.hbase.client.Table table = null;
+        Connection connection = this.connection;
         lock.writeLock().lock();
         try {
-            table = connection.getTable(tableName);
-            table.setAutoFlush(false);
+            table = connection.getTable(TableName.valueOf(tableName));
             table.increment(increment);
-            table.flushCommits();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -789,7 +778,7 @@ public final class HbaseAccessor<QUERY_OP_TYPE extends QueryOps<ROW_ID_TYPE>, RO
     public void openConnection() {
         try {
             // 创建连接池
-            connection = HConnectionManager
+            connection = ConnectionFactory
                     .createConnection(conf, new ThreadPoolExecutor(
                             poolCoreSize, poolMaxSize, 0L,
                             TimeUnit.MILLISECONDS,

@@ -7,11 +7,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hbase.filter.BinaryComparator;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
-import org.apache.hadoop.hbase.filter.WritableByteArrayComparable;
+import org.apache.hadoop.hbase.filter.*;
+//import org.apache.hadoop.hbase.filter.WritableByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.FilterList.Operator;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -194,7 +191,7 @@ class QueryContext {
                         filter);
                 CompareOp compareOp = (CompareOp) fields.get("compareOp").get(
                         filter);
-                WritableByteArrayComparable writableByteArrayComparable = (WritableByteArrayComparable) fields
+                ByteArrayComparable writableByteArrayComparable = (ByteArrayComparable) fields
                         .get("comparator").get(filter);
                 boolean foundColumn = (Boolean) fields.get("foundColumn").get(
                         filter);
