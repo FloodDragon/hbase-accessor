@@ -21,7 +21,7 @@ public class FetchRow<ROW_ID_TYPE> {
 
     private static final Log LOG = LogFactory.getLog(FetchRow.class);
     private byte[] currentFamily;
-    private Get get = new Get();
+    private Get get;
     private byte[] tableName;
     private HbaseAccessor<? extends QueryOps<ROW_ID_TYPE>, ROW_ID_TYPE> hBase;
     private Result result;
