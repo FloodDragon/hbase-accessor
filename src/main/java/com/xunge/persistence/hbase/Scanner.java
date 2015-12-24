@@ -140,7 +140,11 @@ public class Scanner<QUERY_OP_TYPE extends QueryOps<ROW_ID_TYPE>, ROW_ID_TYPE>
      * @param timestamp
      */
     protected void setTimestamp(long timestamp) {
-        scan.setTimeStamp(timestamp);
+        try {
+            scan.setTimeStamp(timestamp);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
